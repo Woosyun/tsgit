@@ -5,6 +5,7 @@ int main(void) {
     int b = 1;
     int c = a + b;
     int d = 3;
+    int e = 4;
 
     printf("1 + 1 = %d\n", c);
 
