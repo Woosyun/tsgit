@@ -71,7 +71,7 @@ export default class Repository {
       this.createObject(defaultEntryHash, defaultEntry);
 
       //init commit
-      this.setCommit(defaultEntryHash);
+      this.setCommit({message: "initial commit", hash:defaultEntryHash});
 
       // init index
       this.setIndex({
@@ -85,11 +85,11 @@ export default class Repository {
   public commit(message: string) { 
     try {
       const index: Entry = this.getIndex();
-      const oldCommitHash = this.getCommit();
-      const oldIndex: TreeEntry = this.readObject(oldCommitHash);
+      const oldCommit: Commit = this.getCommit();
+      const oldIndex: TreeEntry = this.readObject(oldCommit.hash);
       const newCommitHash = this.compareTreeEntry(this.WORKDIR, oldIndex, index);
-      if (newCommitHash !== oldCommitHash)
-        this.setCommit(newCommitHash);
+      if (newCommitHash !== oldCommit.hash)
+        this.setCommit({message: message, hash: newCommitHash});
 
       return true;
     } catch (error) {
@@ -200,17 +200,12 @@ export default class Repository {
     }
   }
   
-  private getCommit() {
-    try {
-      return fs.readFileSync(this.COMMIT, 'utf-8');
-    } catch (error) {
-      console.log('(getCommit)', error);
-      return "";
-    }
+  private getCommit(): Commit {
+    return JSON.parse(fs.readFileSync(this.COMMIT, 'utf-8'));
   }
-  private setCommit(hash: string) {
+  private setCommit(commit: Commit) {
     try {
-      fs.writeFileSync(this.COMMIT, hash, 'utf-8');
+      fs.writeFileSync(this.COMMIT, JSON.stringify((commit)), 'utf-8');
       return true;
     } catch (error) {
       console.log('(setCommit)', error);
@@ -290,8 +285,6 @@ export default class Repository {
         this.addEntry(baseEntry.entries[idx], relativePath.slice(1), newEntry);
       }
     }
-    //update this hash
-    // baseEntry.hash = baseEntry.entries.map((e) => e.hash).join('');
   }
   private createEntry(absolutePath: string): Entry {
     try {
@@ -300,16 +293,18 @@ export default class Repository {
         return {
           name: path.basename(absolutePath),
           type: 'blob',
-          // hash: computeHash(fs.readFileSync(absolutePath, 'utf-8')),
           entries: []
         };
       } else {
         const stats = fs.readdirSync(absolutePath);
-        const newEntries = stats.map((s) => this.createEntry(path.join(absolutePath, s)));
+        const newEntries: Entry[] = [];
+        stats.forEach((s) => {
+          if (!/^\./.test(s))
+            newEntries.push(this.createEntry(path.join(absolutePath, s)));
+        });
         return {
           name: path.basename(absolutePath),
           type: 'tree',
-          // hash: computeHash(newEntries.map((e: Entry) => e.hash).join('')),
           entries: newEntries
         };
       }
