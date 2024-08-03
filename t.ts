@@ -1,5 +1,2 @@
-const regex = /^\./;
-if (regex.test('md.vcs'))
-  console.log('yes');
-else
-  console.log('no');
+const m = new Map();
+console.log(m.get('a'));
