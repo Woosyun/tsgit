@@ -6,6 +6,15 @@ import { getIndex, storeIndex } from "./index";
 import { hashBlob, hashCommit, hashTree } from "./hash";
 import { getCommitRef, setCommitRef, updateCurrentBranch } from "./refs";
 
+export function commitInit() {
+  const tree: Tree = {
+    entries: []
+  };
+  const treeHash = hashTree(tree);
+  createObject(treeHash, tree);
+  setCommitRef(treeHash); 
+}
+
 export function handleCommit(workDir:string, message: string) {
   const index: Index = getIndex();
   // console.log('(commit)index: ', index);

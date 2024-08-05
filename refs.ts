@@ -79,7 +79,7 @@ export function updateCurrentBranch() {
   }
 }
 
-export function checkout(hash: string) { 
+export function handleCheckout(hash: string) { 
   //find commit hash value that match with hash
   if (!readObject(hash)) {
     console.log('target commit object does not exist');

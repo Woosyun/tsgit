@@ -1,5 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import { handleCheckout, refsInit } from './refs';
+import { addIndex, createIndex, getIndex, indexInit, removeIndex, setIndex } from './index';
+import { commitInit, handleCommit } from './commit';
 
 export default class Repository {
   WORKDIR = '/'
@@ -18,60 +21,19 @@ export default class Repository {
     } else {
       fs.mkdirSync(this.REPOSITORY);
       
-      // store default tree object
-      const tree: Tree = {
-        entries: []
-      };
-      const treeHash = hashTree(tree);
-      createObject(treeHash, tree);
-
       //init commit
-      setCommit("");
-
-      // init index
-      setIndex({
-        name: path.basename(this.WORKDIR),
-        type: 'tree',
-        entries: []
-      });
+      commitInit()
 
       //init refs
       refsInit(this.REPOSITORY);
+
+      //init index
+      indexInit(this. WORKDIR, this.REPOSITORY);
     }
   }
 
   public commit(message: string) { 
-    try {
-      if (!getCurrentHeadName()) {
-        console.log('you have to create branch to commit in this revision');
-        return;
-      }
-      
-      const index: Index = getIndex();
-      // console.log('(commit)index: ', index);
-      const oldCommitHash: string = getCommit();
-      const oldCommit: Commit = readObject(oldCommitHash);
-      // console.log('(commit) old commit: ', oldCommit);
-
-      const newTreeHash = treeStoreChange(this.WORKDIR, oldCommit.hash, index);
-      const newCommit: Commit = {
-        message,
-        hash: newTreeHash,
-        parentHash: oldCommitHash
-      };
-      const newCommitHash = hashCommit(newCommit);
-
-      if (newTreeHash !== oldCommit.hash) {
-        createObject(newCommitHash, newCommit);
-        setCommit(newCommitHash);
-        //update hash of current head
-      }
-
-      return true;
-    } catch (error) {
-      console.log('(commit)', error);
-      return false;
-    }
+    handleCommit(this.WORKDIR, message);
   }
 
   public add(p: string) { 
@@ -114,6 +76,6 @@ export default class Repository {
   }
 
   public checkout(hash: string) {
-    
+    handleCheckout(hash);
   }
 }

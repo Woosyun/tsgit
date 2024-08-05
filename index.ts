@@ -6,8 +6,13 @@ import { hashBlob, hashTree } from './hash';
 import { createObject } from './object';
 
 let indexPath = 'index';
-export function setIndexPath(repoPath: string) {
-  indexPath = path.join(repoPath, 'index');
+export function indexInit(workingPath: string, repositoryPath: string) {
+  indexPath = path.join(repositoryPath, 'index');
+  setIndex({
+    name: path.basename(workingPath),
+    type: 'tree',
+    entries: []
+  });
 }
 
 export function getIndex() { 
