@@ -1,57 +1,76 @@
-import fs from 'fs';
 import path from 'path';
-import { getCommit } from './commit';
+import fs from 'fs';
+import { Commit } from './types';
+import { readObject } from './object';
 
-type HeadType = 0 | 1;
-const headTypes = [
+type BranchType = 0 | 1;
+const branchTypes = [
   'locals',
   'remotes'
 ];
-let refs = 'refs';
-let headPath = 'head';
+let commitRefPath = 'commit';
+let headRefPath = 'head';
+let branchesPath = 'branches';
+
 export function refsInit(repositoryPath: string) {
-  //if heads, locals, remotes folder not exist, create them
-  refs = path.join(repositoryPath, 'refs');
-  headPath = path.join(repositoryPath, 'head');
-
-  headTypes.forEach((headType) => {
-    fs.mkdirSync(path.join(refs, headType));
-  });
-
-  createBranch('main', getCommit());
-  setCurrentHeadName('main');
+  headRefPath = path.join(repositoryPath, 'head');
+  commitRefPath = path.join(repositoryPath, 'commit');
+  branchesPath = path.join(repositoryPath, 'branches');
 }
 
-export function writeHead(headType: HeadType, headName: string, hash: string) {
-  const headPath = path.join(refs, headTypes[headType], headName);
-  fs.writeFileSync(headPath, hash, 'utf-8');
+export function getCommitRef(): string {
+  return fs.readFileSync(commitRefPath, 'utf-8').toString();
 }
-export function readHead(headType: HeadType, headName: string): string {
-  const headPath = path.join(refs, headTypes[headType], headName);
-  return fs.readFileSync(headPath, 'utf-8');
+export function setCommitRef(hash: string) {
+  fs.writeFileSync(commitRefPath, hash, 'utf-8');
 }
 
-export function createBranch(branchName: string, currentCommitHash: string){
-  const branchPath = path.join(refs, headTypes[0], branchName);
-  if (fs.existsSync(branchPath)) {
-    console.log('branch already exists');
+function getHead() {
+  return fs.readFileSync(headRefPath, 'utf-8').toString();
+}
+function setHead(branchName: string) {
+  fs.writeFileSync(headRefPath, branchName, 'utf-8');
+}
+
+export function getBranches(branchType: BranchType) {
+  const branches = fs.readdirSync(path.join(branchesPath, branchTypes[branchType]));
+  return branches;
+}
+export function getBranch(branchType: BranchType, branchName: string) { 
+  const branchPath = path.join(branchesPath, branchTypes[branchType], branchName);
+  return fs.readFileSync(branchPath, 'utf-8');
+}
+export function createBranch(branchType: BranchType, branchName: string, hash: string) { 
+  const branchPath = path.join(branchesPath, branchTypes[branchType], branchName);
+  fs.mkdirSync(path.dirname(branchPath), { recursive: true });
+  fs.writeFileSync(branchPath, hash);
+}
+// export function removeBranch(branchType: BranchType, branchName: string) { }
+export function setBranch(branchType: BranchType, branchName: string, hash: string) { 
+  const branchPath = path.join(branchesPath, branchTypes[branchType], branchName);
+  if (!fs.existsSync(branchPath)) {
+    console.log('(setBranch) branch does not exist');
     return;
   }
-
-  fs.writeFileSync(branchPath, currentCommitHash);
+  createBranch(branchType, branchName, hash);
 }
 
-export function getCurrentHeadName() {
-  const headName = fs.readFileSync(headPath, 'utf-8').toString();
-  return headName;
-}
-export function setCurrentHeadName(headName: string) {
-  fs.writeFileSync(headPath, headName);
+export function updateCurrentBranch() {
+  const commitHash = getCommitRef();
+  let head = getHead();
+
+  if (!head) {
+    //create new branch. If there isn't branch, that means commit hash is unique, so it can be used as branch name
+    createBranch(0, commitHash, commitHash);
+    setHead(commitHash);
+    head = commitHash;
+  } else {
+    setBranch(0, head, commitHash);
+  }
 }
 
-export function refsHandleCommit(hash: string) {
-  //get current head name
-  const headName = getCurrentHeadName();
+export function checkout(hash: string) { 
+  //find commit hash value that match with hash
+  const commit: Commit = readObject(hash);
   
-  //update current ref
 }

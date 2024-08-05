@@ -1,14 +1,5 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { computeHash, hashTree, hashBlob, hashTreeEntry, hashCommit } from './hash';
-import { Index, Entry, Blob, Tree, Commit } from './types';
-import { addIndex, createIndex, getIndex, removeIndex, setIndex, setIndexPath, storeIndex } from './index';
-import { getCommit, setCommit, setCommitPath } from './commit';
-import { createObject, readObject, setObjectsPath } from './object';
-import { setIgnorePath } from './ignore';
-import { treeStoreChange } from './entry';
-import { setConfig } from './config';
-import { createBranch, getCurrentHeadName, refsInit } from './refs';
 
 export default class Repository {
   WORKDIR = '/'
@@ -17,12 +8,6 @@ export default class Repository {
   constructor(dir: string) { 
     this.WORKDIR = dir;
     this.REPOSITORY = path.join(dir, this.REPOSITORY);
-    setCommitPath(this.REPOSITORY);
-    setIndexPath(this.REPOSITORY);
-    setObjectsPath(this.REPOSITORY);
-    setIgnorePath(this.REPOSITORY);
-    setConfig(this.REPOSITORY);
-
     this.init();
   }
 
