@@ -31,14 +31,24 @@ function getHead() {
 function setHead(branchName: string) {
   fs.writeFileSync(headRefPath, branchName, 'utf-8');
 }
+function findHead(branchType: BranchType, hash: string) {
+  //get list of head-hash and change it to map structure
+  const branches = getBranches(branchType);
+  for (let branch of branches) {
+    if (readBranch(branchType, branch) === hash) {
+      return branch;
+    }
+  }
+  return "";
+}
 
-export function getBranches(branchType: BranchType) {
+function getBranches(branchType: BranchType) {
   const branches = fs.readdirSync(path.join(branchesPath, branchTypes[branchType]));
   return branches;
 }
-export function getBranch(branchType: BranchType, branchName: string) { 
+export function readBranch(branchType: BranchType, branchName: string) { 
   const branchPath = path.join(branchesPath, branchTypes[branchType], branchName);
-  return fs.readFileSync(branchPath, 'utf-8');
+  return fs.readFileSync(branchPath, 'utf-8').toString();
 }
 export function createBranch(branchType: BranchType, branchName: string, hash: string) { 
   const branchPath = path.join(branchesPath, branchTypes[branchType], branchName);
@@ -71,6 +81,11 @@ export function updateCurrentBranch() {
 
 export function checkout(hash: string) { 
   //find commit hash value that match with hash
-  const commit: Commit = readObject(hash);
-  
+  if (!readObject(hash)) {
+    console.log('target commit object does not exist');
+    return;
+  }
+  setCommitRef(hash);
+  //find branch for this hash
+  setHead(findHead(0, hash));
 }

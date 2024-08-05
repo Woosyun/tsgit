@@ -24,7 +24,7 @@ export function createObject(hash: string, content: any): boolean {
 export function readObject(hash: string) {
   try {
     const p = hashToObjectPath(hash);
-    const content: string = fs.readFileSync(p, 'utf-8');
+    const content: string = fs.readFileSync(p, 'utf-8').toString();
     return JSON.parse(content);
   } catch (error) {
     console.log('(readObject)', error);
