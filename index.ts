@@ -5,9 +5,9 @@ import { isIgnored } from './ignore';
 import { hashBlob, hashTree } from './hash';
 import { createObject } from './object';
 
-let indexPath: string = '';
-export function setIndexPath(newPath: string) {
-  indexPath = newPath;
+let indexPath = 'index';
+export function setIndexPath(repoPath: string) {
+  indexPath = path.join(repoPath, 'index');
 }
 
 export function getIndex() { 

@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs';
-import { Entry, Blob, Tree } from './types';
+import { Entry, Blob, Tree, Commit } from './types';
 
 export function computeHash(content: string) {
   return crypto.createHash('sha1').update(content, 'utf-8').digest('hex');
@@ -13,4 +13,7 @@ export function hashTree(tree: Tree): string {
 }
 export function hashBlob(blob: Blob): string {
   return computeHash(blob.content);
+}
+export function hashCommit(commit: Commit): string {
+  return computeHash(commit.message + commit.hash + commit.parentHash);
 }

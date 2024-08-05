@@ -1,39 +1,27 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { computeHash, hashTree, hashBlob, hashTreeEntry } from './hash';
+import { computeHash, hashTree, hashBlob, hashTreeEntry, hashCommit } from './hash';
 import { Index, Entry, Blob, Tree, Commit } from './types';
 import { addIndex, createIndex, getIndex, removeIndex, setIndex, setIndexPath, storeIndex } from './index';
 import { getCommit, setCommit, setCommitPath } from './commit';
 import { createObject, readObject, setObjectsPath } from './object';
 import { setIgnorePath } from './ignore';
 import { treeStoreChange } from './entry';
-import { sensitiveHeaders } from 'http2';
+import { setConfig } from './config';
+import { createBranch, getCurrentHeadName, refsInit } from './refs';
 
 export default class Repository {
   WORKDIR = '/'
   REPOSITORY = '.vcs';
-  // refs = 'refs'; // hash values for local, remote
-  branches = 'branches'; // hash values for branches
-  OBJECTS = 'objects'; // hash value and contents for tree, blob, commit. Folder + file = hash value
-  head = 'HEAD'; // pointer for current revision
-  // origingHead = 'ORIG_HEAD'; // hash value for remote head
-  // config = 'CONFIG'; // information including url for remote server, name of current branch, etc
-  COMMIT = 'COMMIT' // hash value for commit object
-  INDEX = 'INDEX'
-  vcsignore = '.vcsignore'
 
   constructor(dir: string) { 
     this.WORKDIR = dir;
     this.REPOSITORY = path.join(dir, this.REPOSITORY);
-    this.COMMIT = path.join(this.REPOSITORY, this.COMMIT);
-    setCommitPath(this.COMMIT);
-    this.INDEX = path.join(this.REPOSITORY, this.INDEX);
-    setIndexPath(this.INDEX);
-    this.OBJECTS = path.join(this.REPOSITORY, this.OBJECTS);
-    setObjectsPath(this.OBJECTS);
-    this.vcsignore = path.join(this.WORKDIR, this.vcsignore);
-    setIgnorePath(this.vcsignore);
-    this.head = path.join(this.REPOSITORY, this.head);
+    setCommitPath(this.REPOSITORY);
+    setIndexPath(this.REPOSITORY);
+    setObjectsPath(this.REPOSITORY);
+    setIgnorePath(this.REPOSITORY);
+    setConfig(this.REPOSITORY);
 
     this.init();
   }
@@ -51,7 +39,9 @@ export default class Repository {
       };
       const treeHash = hashTree(tree);
       createObject(treeHash, tree);
-      setCommit({message: "initial commit", hash:treeHash, parentHash: ""});
+
+      //init commit
+      setCommit("");
 
       // init index
       setIndex({
@@ -59,18 +49,38 @@ export default class Repository {
         type: 'tree',
         entries: []
       });
+
+      //init refs
+      refsInit(this.REPOSITORY);
     }
   }
 
   public commit(message: string) { 
     try {
+      if (!getCurrentHeadName()) {
+        console.log('you have to create branch to commit in this revision');
+        return;
+      }
+      
       const index: Index = getIndex();
       // console.log('(commit)index: ', index);
-      const oldCommit: Commit = getCommit();
+      const oldCommitHash: string = getCommit();
+      const oldCommit: Commit = readObject(oldCommitHash);
       // console.log('(commit) old commit: ', oldCommit);
-      const newCommitHash = treeStoreChange(this.WORKDIR, oldCommit.hash, index);
-      if (newCommitHash !== oldCommit.hash)
-        setCommit({message: message, hash: newCommitHash, parentHash: oldCommit.hash});
+
+      const newTreeHash = treeStoreChange(this.WORKDIR, oldCommit.hash, index);
+      const newCommit: Commit = {
+        message,
+        hash: newTreeHash,
+        parentHash: oldCommitHash
+      };
+      const newCommitHash = hashCommit(newCommit);
+
+      if (newTreeHash !== oldCommit.hash) {
+        createObject(newCommitHash, newCommit);
+        setCommit(newCommitHash);
+        //update hash of current head
+      }
 
       return true;
     } catch (error) {
@@ -118,15 +128,7 @@ export default class Repository {
     }
   }
 
-  public reset(targetHash: string) {
-    let p: Commit = getCommit();
-    while (p.hash !== targetHash) {
-      if (!p.parentHash) {
-        console.log('There is no such commit object');
-        return;
-      }
-      p = readObject(p.parentHash);
-    }
-    setCommit(p);
+  public checkout(hash: string) {
+    
   }
 }

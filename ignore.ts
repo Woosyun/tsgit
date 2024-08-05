@@ -2,9 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 let ignorePath: string = '.vcsignore';
-
-export function setIgnorePath(newPath: string): void {
-  ignorePath = newPath;
+export function setIgnorePath(repoPath: string): void {
+  ignorePath = path.join(repoPath, '.vcsignore');
 }
 
 export function isIgnored(name: string) {

@@ -2,8 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 let objectsPath = 'objects';
-export function setObjectsPath(newPath: string) {
-  objectsPath = newPath;
+export function setObjectsPath(repoPath: string) {
+  objectsPath = path.join(repoPath, 'objects');
 }
 
 export function hashToObjectPath(hash: string): string {
