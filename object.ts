@@ -1,5 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { Commit, Tree, Hash } from './types';
+
 
 let objectsPath = 'objects';
 export function setObjectsPath(repoPath: string) {
@@ -30,4 +32,27 @@ export function readObject(hash: string) {
     console.log('(readObject)', error);
     return null;
   }
+}
+
+export function getEntireCommit(commitHash: Hash): [Hash, string][]{
+  const commit: Commit = readObject(commitHash) as Commit;
+  const commitObject: [Hash, string] = [commitHash, JSON.stringify(commit)];
+
+  const entireObjects = getEntireObjects(commit.hash);
+  return [commitObject, ...entireObjects];
+}
+
+function getEntireObjects(treeHash: Hash): [Hash, string][]{
+  let hashAndContentArray: [Hash, string][] = [];
+
+  const tree = readObject(treeHash) as Tree;
+  for (const entry of tree.entries) {
+    if (entry.type === 'blob') {
+      hashAndContentArray.push([entry.hash, JSON.stringify(readObject(entry.hash))]);
+    } else {
+      hashAndContentArray.push(...getEntireObjects(entry.hash));
+    }
+  }
+
+  return hashAndContentArray;
 }

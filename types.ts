@@ -3,11 +3,11 @@ export type Index = {
   type: 'blob' | 'tree';
   entries: Index[];
 };
-
+export type Hash = string;
 export type Entry = {
   name: string;
   type: 'blob' | 'tree';
-  hash: string;
+  hash: Hash;
 }
 export type Blob = {
   content: string;
@@ -18,11 +18,7 @@ export type Tree = {
 
 export type Commit = {
   message: string;
-  hash: string; //pointer to root tree
-  parentHash: string;
-}
-
-export type Branch = {
-  name: string,
-  hash: string
+  branch: string;
+  hash: Hash; //pointer to root tree
+  parentHash: Hash;
 }

@@ -15,5 +15,5 @@ export function hashBlob(blob: Blob): string {
   return computeHash(blob.content);
 }
 export function hashCommit(commit: Commit): string {
-  return computeHash(commit.message + commit.hash + commit.parentHash);
+  return computeHash(commit.message + commit.branch + commit.hash + commit.parentHash);
 }

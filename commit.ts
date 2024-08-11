@@ -4,7 +4,7 @@ import { createObject, readObject } from "./object";
 import { Entry, Index, Tree, Blob, Commit } from "./types";
 import { getIndex, storeIndex } from "./index";
 import { hashBlob, hashCommit, hashTree } from "./hash";
-import { getCommitRef, setCommitRef, updateCurrentBranch } from "./refs";
+import { getCommitRef, getHead, setCommitRef, updateCurrentBranch } from "./refs";
 
 export function commitInit() {
   const tree: Tree = {
@@ -23,9 +23,11 @@ export function handleCommit(workDir:string, message: string) {
   // console.log('(commit) old commit: ', oldCommit);
 
   const newTreeHash = treeStoreChange(workDir, oldCommit.hash, index);
-  if (newTreeHash !== oldCommit.hash) {// new commit detected!!
+  if (newTreeHash !== oldCommit.hash) {// new commit
+    const currentBranch = getHead();
     const newCommit: Commit = {
       message,
+      branch: currentBranch,
       hash: newTreeHash,
       parentHash: oldCommitHash
     };

@@ -3,79 +3,76 @@ import fs from 'fs';
 import { Commit } from './types';
 import { readObject } from './object';
 
-type BranchType = 0 | 1;
-const branchTypes = [
-  'locals',
-  'remotes'
+type HeadType = 0 | 1;
+const headTypes = [
+  'local',
+  'remote'
 ];
 let commitRefPath = 'commit';
 let headRefPath = 'head';
-let branchesPath = 'branches';
+let headsPath = 'heads';
 
 export function refsInit(repositoryPath: string) {
   headRefPath = path.join(repositoryPath, 'head');
   commitRefPath = path.join(repositoryPath, 'commit');
-  branchesPath = path.join(repositoryPath, 'branches');
+  headsPath = path.join(repositoryPath, 'branches');
 }
 
-export function getCommitRef(): string {
+export function getCurrentCommitHash(): string {
   return fs.readFileSync(commitRefPath, 'utf-8').toString();
 }
-export function setCommitRef(hash: string) {
+export function setCurrentCommitHash(hash: string) {
   fs.writeFileSync(commitRefPath, hash, 'utf-8');
 }
 
-function getHead() {
+export function getCurrentHeadName() {
   return fs.readFileSync(headRefPath, 'utf-8').toString();
 }
-function setHead(branchName: string) {
-  fs.writeFileSync(headRefPath, branchName, 'utf-8');
+function setCurrentHeadName(headName: string) {
+  fs.writeFileSync(headRefPath, headName, 'utf-8');
 }
-function findHead(branchType: BranchType, hash: string) {
+function findHeadByHash(headType: HeadType, hash: string): string {
   //get list of head-hash and change it to map structure
-  const branches = getBranches(branchType);
+  const branches = getHeadNames(headType);
   for (let branch of branches) {
-    if (readBranch(branchType, branch) === hash) {
+    if (readHead(headType, branch) === hash) {
       return branch;
     }
   }
   return "";
 }
-
-function getBranches(branchType: BranchType) {
-  const branches = fs.readdirSync(path.join(branchesPath, branchTypes[branchType]));
+export function getHeadNames(headType: HeadType) {
+  const branches = fs.readdirSync(path.join(headsPath, headTypes[headType]));
   return branches;
 }
-export function readBranch(branchType: BranchType, branchName: string) { 
-  const branchPath = path.join(branchesPath, branchTypes[branchType], branchName);
+export function readHead(headType: HeadType, headName: string) { 
+  const branchPath = path.join(headsPath, headTypes[headType], headName);
   return fs.readFileSync(branchPath, 'utf-8').toString();
 }
-export function createBranch(branchType: BranchType, branchName: string, hash: string) { 
-  const branchPath = path.join(branchesPath, branchTypes[branchType], branchName);
+
+// export function removeBranch(headType: HeadType, headName: string) { }
+
+export function setHead(headType: HeadType, headName: string, hash: string) { 
+  const branchPath = path.join(headsPath, headTypes[headType], headName);
+  if (!fs.existsSync(branchPath)) {
+    console.log('(setHead) branch does not exist');
+    return;
+  }
   fs.mkdirSync(path.dirname(branchPath), { recursive: true });
   fs.writeFileSync(branchPath, hash);
 }
-// export function removeBranch(branchType: BranchType, branchName: string) { }
-export function setBranch(branchType: BranchType, branchName: string, hash: string) { 
-  const branchPath = path.join(branchesPath, branchTypes[branchType], branchName);
-  if (!fs.existsSync(branchPath)) {
-    console.log('(setBranch) branch does not exist');
-    return;
-  }
-  createBranch(branchType, branchName, hash);
-}
 
-export function updateCurrentBranch() {
-  const commitHash = getCommitRef();
-  let head = getHead();
+export function updateCurrentHead() {
+  const commitHash = getCurrentCommitHash();
+  let head = getCurrentHeadName();
 
   if (!head) {
     //create new branch. If there isn't branch, that means commit hash is unique, so it can be used as branch name
-    createBranch(0, commitHash, commitHash);
-    setHead(commitHash);
+    setHead(0, commitHash, commitHash);
+    setCurrentHeadName(commitHash);
     head = commitHash;
   } else {
-    setBranch(0, head, commitHash);
+    setHead(0, head, commitHash);
   }
 }
 
@@ -85,7 +82,7 @@ export function handleCheckout(hash: string) {
     console.log('target commit object does not exist');
     return;
   }
-  setCommitRef(hash);
+  setCurrentCommitHash(hash);
   //find branch for this hash
-  setHead(findHead(0, hash));
+  setCurrentHeadName(findHeadByHash(0, hash));
 }
