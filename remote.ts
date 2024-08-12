@@ -1,18 +1,16 @@
-import http from 'http';
 import { getHeadNames, readHead, setHead } from './refs';
 import { Commit, Hash } from './types';
-import { getEntireCommit, readObject } from './object';
+import { createObject, getEntireCommit, readObject } from './object';
 import { listXOR } from './list';
 
-
-let hostname = "";
-export function setRemoteRepositoryUrl(newHostname: string) {
-  hostname = newHostname;
+let repositoryUrl = "";
+export function setRemoteRepositoryUrl(newRepositoryUrl: string) {
+  repositoryUrl = newRepositoryUrl;
 }
 
 async function upload(body: string) {
   try {
-    const response = await fetch('https://example.com/api', {
+    const response = await fetch(repositoryUrl + '/upload', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -31,7 +29,7 @@ async function upload(body: string) {
   }
 }
 
-function readBranch(head: string): Hash[] {
+function getBranch(head: string): Hash[] {
   let hashArray: Hash[] = [];
   let hash = readHead(0, head);
   let commit = readObject(hash) as Commit;
@@ -52,16 +50,16 @@ function readBranch(head: string): Hash[] {
  */
 export function push() { 
   //fetch
-  if (!fetch()) {
+  if (!download()) {
     console.log('(push) fetch failed');
     return;
   }
 
-  //compare
+  //compare and informations about new commits of branches
   const localHeads = getHeadNames(0);
-  const localBranches = new Map<string, Hash[]>(localHeads.map((head: string) => [head, readBranch(head)]));
+  const localBranches = new Map<string, Hash[]>(localHeads.map((head: string) => [head, getBranch(head)]));
   const remoteHeads = getHeadNames(1);
-  const remoteBranches = new Map<string, Hash[]>(remoteHeads.map((head: string) => [head, readBranch(head)]));
+  const remoteBranches = new Map<string, Hash[]>(remoteHeads.map((head: string) => [head, getBranch(head)]));
 
   const newBranches = new Map<string, Hash[]>();
   for (const [head, localHashes] of localBranches) {
@@ -95,7 +93,31 @@ export function push() {
 /**
  * fetch remote repository to refs/remote
  */
-function fetchRemote() { }
+async function download() { 
+  try {
+    const res = await fetch(repositoryUrl + '/download', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+    const data = await res.json();
+    
+    //update refs/remote
+    const objects = data.objects;
+    const branches = data.branches;
+    for (const [hash, content] of objects) {
+      createObject(hash, content);
+    }
+    for (const [head, hashes] of branches) {
+      setHead(1, head, hashes[0]);
+    }
+    return true;
+  } catch (error) {
+    console.log('(download)', error);
+    return false;
+  }
+}
 
 /**
  * 1. fetch remote repository
@@ -103,10 +125,24 @@ function fetchRemote() { }
  */
 export function pull() { 
   //fetch
-  if (!fetch()) {
+  if (!download()) {
     console.log('(pull) fetch failed');
     return;
   }
-  //compare
-  //if no conflict, update refs/local
+  
+  //compare and if no conflict, update refs/local
+  const remoteHeads = getHeadNames(1);
+  const remoteBranches = new Map<string, Hash[]>(remoteHeads.map((head: string) => [head, getBranch(head)]));
+  const localHeads = getHeadNames(0);
+  const localBranches = new Map<string, Hash[]>(localHeads.map((head: string) => [head, getBranch(head)]));
+  for (const [head, remoteHashes] of remoteBranches) {
+    const [newRemoteHashes, newLocalHashes] = listXOR(remoteHashes, localBranches.get(head));
+    if (newRemoteHashes.length !== 0) {
+      if (newLocalHashes.length !== 0) {
+        console.log('(pull) conflict detected');
+        return;
+      }
+      setHead(0, head, remoteHashes[0]);
+    }
+  }
 }
