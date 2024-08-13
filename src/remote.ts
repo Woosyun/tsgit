@@ -1,4 +1,4 @@
-import { getHeadNames, readHead, setHead } from './refs';
+import { getBranchNames, readHead, setHead } from './refs';
 import { Commit, Hash } from './types';
 import { createObject, getEntireCommit, readObject } from './object';
 import { listXOR } from './list';
@@ -56,9 +56,9 @@ export function push() {
   }
 
   //compare and informations about new commits of branches
-  const localHeads = getHeadNames(0);
+  const localHeads = getBranchNames(0);
   const localBranches = new Map<string, Hash[]>(localHeads.map((head: string) => [head, getBranch(head)]));
-  const remoteHeads = getHeadNames(1);
+  const remoteHeads = getBranchNames(1);
   const remoteBranches = new Map<string, Hash[]>(remoteHeads.map((head: string) => [head, getBranch(head)]));
 
   const newBranches = new Map<string, Hash[]>();
@@ -131,9 +131,9 @@ export function pull() {
   }
   
   //compare and if no conflict, update refs/local
-  const remoteHeads = getHeadNames(1);
+  const remoteHeads = getBranchNames(1);
   const remoteBranches = new Map<string, Hash[]>(remoteHeads.map((head: string) => [head, getBranch(head)]));
-  const localHeads = getHeadNames(0);
+  const localHeads = getBranchNames(0);
   const localBranches = new Map<string, Hash[]>(localHeads.map((head: string) => [head, getBranch(head)]));
   for (const [head, remoteHashes] of remoteBranches) {
     const [newRemoteHashes, newLocalHashes] = listXOR(remoteHashes, localBranches.get(head));
