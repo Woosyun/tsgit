@@ -4,7 +4,7 @@ import { createObject, readObject } from "./object";
 import { Entry, Index, Tree, Blob, Commit } from "./types";
 import { getIndex, storeIndex } from "./index";
 import { hashBlob, hashCommit, hashTree } from "./hash";
-import { getCommitRef, getHead, setCommitRef, updateCurrentBranch } from "./refs";
+import { getCurrentCommitHash, getCurrentBranchName, setCurrentCommitHash, updateCurrentHead, setHead, setCurrentBranchName } from "./refs";
 
 export function commitInit() {
   const tree: Tree = {
@@ -12,19 +12,29 @@ export function commitInit() {
   };
   const treeHash = hashTree(tree);
   createObject(treeHash, tree);
-  setCommitRef(treeHash); 
+  const commit: Commit = {
+    message: 'init commit',
+    branch: 'main',
+    hash: treeHash,
+    parentHash: ''
+  };
+  const commitHash = hashCommit(commit);
+  createObject(commitHash, commit);
+  setCurrentCommitHash(commitHash); 
+  setHead(0, 'main', commitHash);
+  setCurrentBranchName('main');
 }
 
 export function handleCommit(workDir:string, message: string) {
   const index: Index = getIndex();
   // console.log('(commit)index: ', index);
-  const oldCommitHash: string = getCommitRef();
+  const oldCommitHash: string = getCurrentCommitHash();
   const oldCommit: Commit = readObject(oldCommitHash);
   // console.log('(commit) old commit: ', oldCommit);
 
   const newTreeHash = treeStoreChange(workDir, oldCommit.hash, index);
   if (newTreeHash !== oldCommit.hash) {// new commit
-    const currentBranch = getHead();
+    const currentBranch = getCurrentBranchName();
     const newCommit: Commit = {
       message,
       branch: currentBranch,
@@ -33,9 +43,9 @@ export function handleCommit(workDir:string, message: string) {
     };
     const newCommitHash = hashCommit(newCommit);
     createObject(newCommitHash, newCommit);
-    setCommitRef(newCommitHash);
+    setCurrentCommitHash(newCommitHash);
     //update hash of current branch
-    updateCurrentBranch();
+    updateCurrentHead(); //TODO: checkout으로 바꾸기
   }
 
   return true;

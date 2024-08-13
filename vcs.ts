@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { handleCheckout, refsInit } from './refs';
 import { addIndex, createIndex, getIndex, indexInit, removeIndex, setIndex } from './index';
 import { commitInit, handleCommit } from './commit';
+import { objectInit } from './object';
 
 export default class Repository {
   WORKDIR = '/'
@@ -10,25 +11,28 @@ export default class Repository {
 
   constructor(dir: string) { 
     this.WORKDIR = dir;
-    this.REPOSITORY = path.join(dir, this.REPOSITORY);
+    this.REPOSITORY = path.join(dir, '.vcs');
+
     this.init();
   }
 
   public init() { 
-    // 1. Check this folder already initialized or not
     if (fs.existsSync(this.REPOSITORY)) {
       console.log('Repository already exists');
     } else {
-      fs.mkdirSync(this.REPOSITORY);
-      
-      //init commit
-      commitInit()
+      fs.mkdirSync(this.REPOSITORY, { recursive: true });
 
       //init refs
       refsInit(this.REPOSITORY);
 
       //init index
-      indexInit(this. WORKDIR, this.REPOSITORY);
+      indexInit(this.WORKDIR, this.REPOSITORY);
+
+      //init objects
+      objectInit(this.REPOSITORY);
+      
+      //init commit
+      commitInit();
     }
   }
 
