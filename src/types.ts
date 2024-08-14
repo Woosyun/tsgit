@@ -8,17 +8,18 @@ export type Entry = {
   name: string;
   type: 'blob' | 'tree';
   hash: Hash;
-}
+};
 export type Blob = {
   content: string;
 };
 export type Tree = {
   entries: Entry[];
-}
-
+};
 export type Commit = {
   message: string;
   branch: string;
   hash: Hash; //pointer to root tree
   parentHash: Hash;
-}
+};
+
+export type HeadType = 0 | 1;

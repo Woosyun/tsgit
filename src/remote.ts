@@ -1,4 +1,4 @@
-import { getBranchNames, readHead, setHead } from './refs';
+import { getHeadNames, getHead, setHead } from './refs';
 import { Commit, Hash } from './types';
 import { createObject, getEntireCommit, readObject } from './object';
 import { listXOR } from './list';
@@ -31,7 +31,7 @@ async function upload(body: string) {
 
 function getBranch(head: string): Hash[] {
   let hashArray: Hash[] = [];
-  let hash = readHead(0, head);
+  let hash = getHead(0, head);
   let commit = readObject(hash) as Commit;
 
   while (commit.parentHash && commit.branch === head) {
@@ -56,9 +56,9 @@ export function push() {
   }
 
   //compare and informations about new commits of branches
-  const localHeads = getBranchNames(0);
+  const localHeads = getHeadNames(0);
   const localBranches = new Map<string, Hash[]>(localHeads.map((head: string) => [head, getBranch(head)]));
-  const remoteHeads = getBranchNames(1);
+  const remoteHeads = getHeadNames(1);
   const remoteBranches = new Map<string, Hash[]>(remoteHeads.map((head: string) => [head, getBranch(head)]));
 
   const newBranches = new Map<string, Hash[]>();
@@ -76,7 +76,7 @@ export function push() {
   //update refs/remote
   for (const [head, _] of localBranches) {
     if (newBranches.has(head))
-      setHead(1, head, readHead(0, head));
+      setHead(1, head, getHead(0, head));
   }
   
   //upload newObjects and newBranches
@@ -131,9 +131,9 @@ export function pull() {
   }
   
   //compare and if no conflict, update refs/local
-  const remoteHeads = getBranchNames(1);
+  const remoteHeads = getHeadNames(1);
   const remoteBranches = new Map<string, Hash[]>(remoteHeads.map((head: string) => [head, getBranch(head)]));
-  const localHeads = getBranchNames(0);
+  const localHeads = getHeadNames(0);
   const localBranches = new Map<string, Hash[]>(localHeads.map((head: string) => [head, getBranch(head)]));
   for (const [head, remoteHashes] of remoteBranches) {
     const [newRemoteHashes, newLocalHashes] = listXOR(remoteHashes, localBranches.get(head));

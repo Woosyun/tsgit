@@ -1,22 +1,22 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { handleCheckout, refsInit } from './refs';
+import { getCurrentCommitHash, handleCheckout, refsInit } from './refs';
 import { addIndex, createIndex, getIndex, indexInit, removeIndex, setIndex } from './index';
 import { commitInit, handleCommit } from './commit';
 import { objectInit } from './object';
+import { createGraph } from './graph'
+import { HeadType } from './types'
 
-export default class Repository {
+export default class VCS {
   WORKDIR = '/'
   REPOSITORY = '.vcs';
 
-  constructor(dir: string) { 
+  constructor() { }
+
+  public init(dir: string) { 
     this.WORKDIR = dir;
     this.REPOSITORY = path.join(dir, '.vcs');
-
-    this.init();
-  }
-
-  public init() { 
+    
     if (fs.existsSync(this.REPOSITORY)) {
       console.log('Repository already exists');
     } else {
@@ -81,5 +81,13 @@ export default class Repository {
 
   public checkout(hash: string) {
     handleCheckout(hash);
+  }
+
+  public getGraph(headType: HeadType) {
+    return createGraph(headType);
+  }
+
+  public whereAmI() {
+    return getCurrentCommitHash();
   }
 }

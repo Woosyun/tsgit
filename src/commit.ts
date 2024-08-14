@@ -4,7 +4,7 @@ import { createObject, readObject } from "./object";
 import { Entry, Index, Tree, Blob, Commit } from "./types";
 import { getIndex, storeIndex } from "./index";
 import { hashBlob, hashCommit, hashTree } from "./hash";
-import { getCurrentCommitHash, getCurrentBranchName, setCurrentCommitHash, updateCurrentHead, setHead, setCurrentBranchName } from "./refs";
+import { getCurrentCommitHash, getCurrentHeadName, setCurrentCommitHash, updateCurrentHead, setHead, setCurrentHeadName } from "./refs";
 
 export function commitInit() {
   const tree: Tree = {
@@ -22,7 +22,7 @@ export function commitInit() {
   createObject(commitHash, commit);
   setCurrentCommitHash(commitHash); 
   setHead(0, 'main', commitHash);
-  setCurrentBranchName('main');
+  setCurrentHeadName('main');
 }
 
 export function handleCommit(workDir:string, message: string) {
@@ -34,7 +34,7 @@ export function handleCommit(workDir:string, message: string) {
 
   const newTreeHash = treeStoreChange(workDir, oldCommit.hash, index);
   if (newTreeHash !== oldCommit.hash) {// new commit
-    const currentBranch = getCurrentBranchName();
+    const currentBranch = getCurrentHeadName();
     const newCommit: Commit = {
       message,
       branch: currentBranch,

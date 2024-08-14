@@ -1,9 +1,8 @@
 import path from 'path';
 import fs from 'fs';
-import { Commit } from './types';
+import { HeadType } from './types';
 import { readObject } from './object';
 
-type HeadType = 0 | 1;
 const headTypes = [
   'local',
   'remote'
@@ -25,27 +24,27 @@ export function setCurrentCommitHash(hash: string) {
   fs.writeFileSync(commitRefPath, hash, 'utf-8');
 }
 
-export function getCurrentBranchName() {
+export function getCurrentHeadName() {
   return fs.readFileSync(headRefPath, 'utf-8').toString();
 }
-export function setCurrentBranchName(headName: string) {
+export function setCurrentHeadName(headName: string) {
   fs.writeFileSync(headRefPath, headName, 'utf-8');
 }
-function findBranchNameByHash(headType: HeadType, hash: string): string {
+function findHeadNameByHash(headType: HeadType, hash: string): string {
   //get list of head-hash and change it to map structure
-  const branches = getBranchNames(headType);
+  const branches = getHeadNames(headType);
   for (let branch of branches) {
-    if (readHead(headType, branch) === hash) {
+    if (getHead(headType, branch) === hash) {
       return branch;
     }
   }
   return "";
 }
-export function getBranchNames(headType: HeadType) {
+export function getHeadNames(headType: HeadType) {
   const branches = fs.readdirSync(path.join(headsPath, headTypes[headType]));
   return branches;
 }
-export function readHead(headType: HeadType, headName: string) { 
+export function getHead(headType: HeadType, headName: string) { 
   const branchPath = path.join(headsPath, headTypes[headType], headName);
   return fs.readFileSync(branchPath, 'utf-8').toString();
 }
@@ -60,12 +59,12 @@ export function setHead(headType: HeadType, headName: string, hash: string) {
 
 export function updateCurrentHead() {
   const commitHash = getCurrentCommitHash();
-  let head = getCurrentBranchName();
+  let head = getCurrentHeadName();
 
   if (!head) {
     //create new branch. If there isn't branch, that means commit hash is unique, so it can be used as branch name
     setHead(0, commitHash, commitHash);
-    setCurrentBranchName(commitHash);
+    setCurrentHeadName(commitHash);
     head = commitHash;
   } else {
     setHead(0, head, commitHash);
@@ -80,5 +79,5 @@ export function handleCheckout(hash: string) {
   }
   setCurrentCommitHash(hash);
   //find branch for this hash
-  setCurrentBranchName(findBranchNameByHash(0, hash));
+  setCurrentHeadName(findHeadNameByHash(0, hash));
 }

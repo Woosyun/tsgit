@@ -2,7 +2,7 @@
   "name": "@woosy2207/tsgit",
   "version": "0.0.0",
   "main": "dist/vcs.js",
-  "types": "dist/vcs.d.ts",
+  "types": "dist/types.d.ts",
   "files": [
     "dist"
   ],
