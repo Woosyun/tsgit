@@ -1,6 +1,6 @@
 {
   "name": "@woosy2207/tsgit",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "dist/vcs.js",
   "types": "dist/types.d.ts",
   "files": [
