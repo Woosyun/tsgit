@@ -4,7 +4,7 @@ import { Commit, Tree, Hash } from './types';
 
 
 let objectsPath = 'objects';
-export function objectInit(repoPath: string) {
+export function objectSetPath(repoPath: string) {
   objectsPath = path.join(repoPath, 'objects');
 }
 

@@ -5,14 +5,19 @@ import { isIgnored } from './ignore';
 import { hashBlob, hashTree } from './hash';
 import { createObject } from './object';
 
-let indexPath = 'index';
-export function indexInit(workingPath: string, repositoryPath: string) {
-  indexPath = path.join(repositoryPath, 'index');
-  setIndex({
-    name: path.basename(workingPath),
-    type: 'tree',
-    entries: []
-  });
+let indexPath = 'INDEX';
+export function indexSetPath(repository: string){
+  indexPath = path.join(repository, 'index');
+}
+
+export function indexInit(workingPath: string) {
+  if (!fs.existsSync(indexPath)) {
+    setIndex({
+      name: path.basename(workingPath),
+      type: 'tree',
+      entries: []
+    });
+  }
 }
 
 export function getIndex() { 

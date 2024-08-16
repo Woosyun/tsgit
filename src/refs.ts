@@ -11,7 +11,7 @@ let commitRefPath = 'COMMIT';
 let headRefPath = 'HEAD';
 let headsPath = 'heads';
 
-export function refsInit(repositoryPath: string) {
+export function refSetPath(repositoryPath: string) {
   headRefPath = path.join(repositoryPath, 'HEAD');
   commitRefPath = path.join(repositoryPath, 'COMMIT');
   headsPath = path.join(repositoryPath, 'heads');
