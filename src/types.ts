@@ -23,5 +23,3 @@ export type Commit = {
 };
 
 export type HeadType = 0 | 1;
-
-export type Node = Commit;

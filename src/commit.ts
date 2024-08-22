@@ -1,5 +1,5 @@
-import path from "path";
-import fs from 'fs';
+import * as path from "path";
+import * as fs from 'fs';
 import { createObject, readObject } from "./object";
 import { Entry, Index, Tree, Blob, Commit } from "./types";
 import { getIndex, storeIndex } from "./index";

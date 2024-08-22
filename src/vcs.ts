@@ -4,7 +4,8 @@ import { getCurrentCommitHash, getHead, getHeadNames, handleCheckout, refSetPath
 import { addIndex, createIndex, getIndex, indexInit, indexSetPath, removeIndex, setIndex } from './index';
 import { commitInit, handleCommit } from './commit';
 import { objectSetPath, readObject } from './object';
-import { Hash, HeadType } from './types'
+import { Branch, Hash, HeadType } from './types'
+import { getBranches } from './branch';
 
 export default class VCS {
   WORKDIR = '/'
@@ -84,10 +85,14 @@ export default class VCS {
   public readObject(hash: Hash) {
     return readObject(hash);
   }
+  public getHeadNames(headType: HeadType) {
+    return getHeadNames(headType);
+  }
+  public getHead(headType: HeadType, headName: string) {
+    return getHead(headType, headName);
+  }
 
-  public mapHeads(headType: HeadType, f: (head: Hash) => void): void {
-    const headNames: string[] = getHeadNames(headType);
-    const heads: Hash[] = headNames.map((headName: string) => getHead(headType, headName));
-    heads.forEach(f);
+  public getBranches(headType: HeadType): Branch[] {
+    return getBranches(headType);
   }
 }
