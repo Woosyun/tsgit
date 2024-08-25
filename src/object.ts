@@ -9,7 +9,11 @@ export function objectSetPath(repoPath: string) {
 }
 
 export function hashToObjectPath(hash: string): string {
-  return path.join(objectsPath, hash.slice(0, 2), hash.slice(2));
+  try {
+    return path.join(objectsPath, hash.slice(0, 2), hash.slice(2));
+  } catch (error: any) {
+    throw new Error('(hashToObjectPath)->' + error.message);
+  }
 }
 export function createObject(hash: string, content: any): boolean {
   try {
@@ -18,7 +22,8 @@ export function createObject(hash: string, content: any): boolean {
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(p, JSON.stringify(content), 'utf-8');
     return true;
-  } catch (error) {
+  } catch (error: any) {
+    throw new Error('(createObject) ' + error.message);
     console.log('(createObject)', error);
     return false;
   }
@@ -26,11 +31,10 @@ export function createObject(hash: string, content: any): boolean {
 export function readObject(hash: string) {
   try {
     const p = hashToObjectPath(hash);
-    const content: string = fs.readFileSync(p, 'utf-8').toString();
+    const content: string = fs.readFileSync(p, 'utf-8');
     return JSON.parse(content);
-  } catch (error) {
-    console.log('(readObject)', error);
-    return null;
+  } catch (error: any) {
+    throw new Error('(readObject)->' + error.message);
   }
 }
 
@@ -38,7 +42,7 @@ export function getEntireCommit(commitHash: Hash): [Hash, string][]{
   const commit: Commit = readObject(commitHash) as Commit;
   const commitObject: [Hash, string] = [commitHash, JSON.stringify(commit)];
 
-  const entireObjects = getEntireObjects(commit.hash);
+  const entireObjects = getEntireObjects(commit.entry.hash);
   return [commitObject, ...entireObjects];
 }
 

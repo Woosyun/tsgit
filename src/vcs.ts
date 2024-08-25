@@ -4,8 +4,9 @@ import { getCurrentCommitHash, getHead, getHeadNames, handleCheckout, refSetPath
 import { addIndex, createIndex, getIndex, indexInit, indexSetPath, removeIndex, setIndex } from './index';
 import { commitInit, handleCommit } from './commit';
 import { objectSetPath, readObject } from './object';
-import { Branch, Hash, HeadType } from './types'
-import { getBranches } from './branch';
+import { Commit, Entry, EntryStatus, Hash, HeadType } from './types'
+import { getStatus } from './status';
+import { readIgnore, ignore, setIgnorePath } from './ignore';
 
 export default class VCS {
   WORKDIR = '/'
@@ -19,6 +20,7 @@ export default class VCS {
     refSetPath(this.REPOSITORY);
     indexSetPath(this.REPOSITORY);
     objectSetPath(this.REPOSITORY);
+    setIgnorePath(this.REPOSITORY);
 
     if (fs.existsSync(this.REPOSITORY)) {
       console.log('Repository already exists');
@@ -35,36 +37,21 @@ export default class VCS {
 
   public add(p: string) { 
     try {
-      const absolutePath = p;
-      // const absolutePath = path.join(__dirname, p);
-      if (!fs.existsSync(absolutePath)) {
-        console.log(absolutePath, ' does not exist.');
-        return false;
-      }
-      // console.log('(add) absolutePath: ', absolutePath);
-
-      const newEntry = createIndex(absolutePath);
-      // console.log('(add) new entry: ', newEntry);
+      const newEntry = createIndex(p);
 
       const index = getIndex();
-      // console.log('(add) index: ', index);
-      // console.log('(add) relativePath: ', path.relative(path.dirname(this.WORKDIR), absolutePath));
-      const newIndex = addIndex(index, path.relative(this.WORKDIR, absolutePath), newEntry);
+      const newIndex = addIndex(index, path.relative(this.WORKDIR, p), newEntry);
 
       setIndex(newIndex);
-      return true;
-    } catch (error) {
-      console.log('(add)', error);
-      return false;
+    } catch (error: any) {
+      throw new Error('(add)->' + error.message);
     }
   }
   
 
   public remove(p: string) {
     try {
-      const absolutePath = p;
-      // const absolutePath = path.join(__dirname, p);
-      const relativePath = path.relative(this.WORKDIR, absolutePath).split('/');
+      const relativePath = path.relative(this.WORKDIR, p).split('/');
       const newIndex = removeIndex(getIndex(), relativePath);
       setIndex(newIndex);
       return true;
@@ -82,6 +69,28 @@ export default class VCS {
     return getCurrentCommitHash();
   }
 
+  public status(): EntryStatus[] {
+    try {
+      const commitHash: Hash = getCurrentCommitHash();
+      const commit = readObject(commitHash) as Commit;
+      return getStatus(this.WORKDIR, commit.entry);
+    } catch (error: any) {
+      throw new Error('(status)->' + error.message);
+    }
+  }
+
+  public getIgnoredNames() {
+    return readIgnore();
+  }
+  public ignore(name: string) {
+    try {
+      ignore(name);
+    } catch (error: any) {
+      throw new Error('(ignore)->' + error.message);
+    }
+  }
+
+
   public readObject(hash: Hash) {
     return readObject(hash);
   }
@@ -90,9 +99,5 @@ export default class VCS {
   }
   public getHead(headType: HeadType, headName: string) {
     return getHead(headType, headName);
-  }
-
-  public getBranches(headType: HeadType): Branch[] {
-    return getBranches(headType);
   }
 }

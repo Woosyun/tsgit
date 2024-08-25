@@ -18,8 +18,17 @@ export type Tree = {
 export type Commit = {
   message: string;
   branch: string;
-  hash: Hash; //pointer to root tree
+  entry: Entry;
   parentHash: Hash;
 };
 
 export type HeadType = 0 | 1;
+
+export type StatusType = 'added' | 'deleted' | 'modified' | 'unmodified' | 'unstaged';
+export type EntryStatus = {
+  name: string;
+  type: 'blob' | 'tree';
+  hash: Hash;
+  status: StatusType;
+  children: EntryStatus[];
+};

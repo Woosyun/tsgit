@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { HeadType } from './types';
+import { Hash, HeadType } from './types';
 import { readObject } from './object';
 
 const headTypes = [
@@ -57,7 +57,7 @@ export function setHead(headType: HeadType, headName: string, hash: string) {
   fs.writeFileSync(branchPath, hash);
 }
 
-export function updateCurrentHead() {
+export function updateCurrentHead(hash: Hash) {
   const commitHash = getCurrentCommitHash();
   let head = getCurrentHeadName();
 

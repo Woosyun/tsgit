@@ -13,7 +13,7 @@ export function indexSetPath(repository: string){
 export function indexInit(workingPath: string) {
   if (!fs.existsSync(indexPath)) {
     setIndex({
-      name: path.basename(workingPath),
+      name: '.',
       type: 'tree',
       entries: []
     });
@@ -23,18 +23,15 @@ export function indexInit(workingPath: string) {
 export function getIndex() { 
   try {
     return JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
-  } catch (error) {
-    console.log('(getIndex)', error);
-    return null;
+  } catch (error: any) {
+    throw new Error('(getIndex)->' + error.message);
   }
 }
-export function setIndex(entry: Index): boolean { 
+export function setIndex(index: Index) { 
   try {
-    fs.writeFileSync(indexPath, JSON.stringify(entry), 'utf-8');
-    return true;
-  } catch (error) {
-    console.log('(setIndex)', error);
-    return false;
+    fs.writeFileSync(indexPath, JSON.stringify(index), 'utf-8');
+  } catch (error: any) {
+    throw new Error('(setIndex)->' + error.message);
   }
 }
 
@@ -81,26 +78,15 @@ export function createIndex(absolutePath: string): Index {
         type: 'blob',
         entries: []
       };
-    } else {
-      const stats = fs.readdirSync(absolutePath);
-      const newEntries: Index[] = [];
-      stats.forEach((s) => {
-        if (!isIgnored(s))
-          newEntries.push(createIndex(path.join(absolutePath, s)));
-      });
-      return {
-        name: path.basename(absolutePath),
-        type: 'tree',
-        entries: newEntries
-      };
     }
-  } catch (error) {
-    console.log('(creatEntry)', error);
+    const names: string[] = fs.readdirSync(absolutePath).filter((name) => !isIgnored(name));
     return {
-      name: 'null',
+      name: path.basename(absolutePath),
       type: 'tree',
-      entries: []
+      entries: names.map((name) => createIndex(path.join(absolutePath, name)))
     };
+  } catch (error: any) {
+    throw new Error('(createIndex)->' + error.message);
   }
 }
 

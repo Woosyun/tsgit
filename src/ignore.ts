@@ -6,12 +6,13 @@ export function setIgnorePath(repoPath: string): void {
   ignorePath = path.join(repoPath, '.vcsignore');
 }
 
-export function isIgnored(name: string) {
+export function isIgnored(name: string): any {
   try {
-    const ignoredContents = fs.readFileSync(ignorePath, 'utf-8').split('\n');
+    const content: string[] = readIgnore();
+    const s: Set<string> = new Set(content);
     // console.log('(isIgnored): ', ignoredContents);
 
-    if (ignoredContents.includes(name)) {
+    if (s.has(name)) {
       // console.log(name, ' is included in .vcsignore');
       return true;
     } else {
@@ -21,5 +22,24 @@ export function isIgnored(name: string) {
     // return ignoredContents.includes(name);
   } catch (error) {
     console.log('(isIgnored)', error);
+  }
+}
+
+export function ignore(name: string): void {
+  const s: Set<string> = new Set(readIgnore());
+  s.add(name);
+  fs.writeFileSync(ignorePath, JSON.stringify(Array.from(s)), 'utf-8');
+}
+
+export function readIgnore(): string[] {
+  try {
+    if (!fs.existsSync(ignorePath)) {
+      fs.writeFileSync(ignorePath, '[]', 'utf-8');
+      return [];      
+    }
+    return JSON.parse(fs.readFileSync(ignorePath, 'utf-8'));
+  } catch (error) {
+    console.log('(readIgnore)', error);
+    return [];
   }
 }
